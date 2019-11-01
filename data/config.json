@@ -1,0 +1,9 @@
+{
+  "这里是id的值": {
+    "logfile": "test-gitea-webhook.log",
+    "secret": "在Webhooks中设定的secret",
+    "commands": [
+      "data/update_repo.sh"
+    ]
+  }
+}
