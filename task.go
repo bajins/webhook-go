@@ -33,8 +33,7 @@ func startTask(task *TaskQueue) {
 	commands := config[task.Id].Commands
 	running = true
 	for _, v := range commands {
-		cmd := exec.Command("/bin/sh", v)
-		_, err := cmd.Output()
+		_, err := exec.Command("/bin/sh", v).Output()
 		if err == nil {
 			utils.Log2file(fmt.Sprintf("部署成功：%s", v), GetLogName(task.Id))
 		} else {
