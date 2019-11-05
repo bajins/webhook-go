@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 )
 
 var (
@@ -22,6 +23,7 @@ func LoadConfig() error {
 		return err
 	}
 	json.Unmarshal(result, &config)
+	log.Println("当前加载的配置：", config)
 	return nil
 }
 

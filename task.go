@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os/exec"
+	"path/filepath"
 	"webhook-go/utils"
 )
 
@@ -33,11 +35,18 @@ func startTask(task *TaskQueue) {
 	commands := config[task.Id].Commands
 	running = true
 	for _, v := range commands {
-		_, err := exec.Command("/bin/sh", v).Output()
+		filePath, err := filepath.Abs(v)
+		if err != nil {
+			utils.Log2file(fmt.Sprintf("部署失败：%s", err), GetLogName(task.Id))
+			return
+		}
+		out, err := exec.Command("/bin/sh", filePath).Output()
+		log.Println(filePath, "执行结果：", out)
 		if err == nil {
-			utils.Log2file(fmt.Sprintf("部署成功：%s", v), GetLogName(task.Id))
+			utils.Log2file(fmt.Sprintf("部署成功：%s", filePath), GetLogName(task.Id))
 		} else {
-			utils.Log2file(fmt.Sprintf("部署失败：%s %s", v, err), GetLogName(task.Id))
+			log.Fatal(filePath, "执行错误：", err)
+			utils.Log2file(fmt.Sprintf("部署失败：%s %s", filePath, err), GetLogName(task.Id))
 		}
 	}
 	queue = queue[:0]
