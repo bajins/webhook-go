@@ -106,7 +106,7 @@ func webHooks(w http.ResponseWriter, r *http.Request) {
 func VerifySignature(header http.Header, data string, secret string) bool {
 	signature := header.Get("X-Hub-Signature")
 	if signature != "" && len(signature) > 0 {
-		signature = strings.Split(signature, "=")[0]
+		signature = strings.Split(signature, "=")[1]
 		return signature == utils.ComputeHash1(data, secret)
 	}
 	signature = header.Get("X-Gitea-Signature")
