@@ -1,5 +1,5 @@
 {
-  "这里是id的值": {
+  "这里是仓库full_name的值": {
     "logfile": "test-gitea-webhook.log",
     "secret": "在Webhooks中设定的secret",
     "commands": [

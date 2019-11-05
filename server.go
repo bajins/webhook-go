@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 	"webhook-go/utils"
 )
@@ -44,21 +47,58 @@ func webHooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-
-	// 解析参数，填充到Form、PostForm
-	r.ParseForm()
-	id := r.Form["id"][0]
-	if id == "" || len(id) <= 0 {
-		fmt.Fprintln(w, "{\"code\":200, \"error\":\"id is empty\"}")
+	if len(bodyContent) <= 0 {
+		fmt.Fprintln(w, "{\"code\":200, \"error\":\"Response Body is empty\"}")
 		return
 	}
 
-	if !VerifySignature(r.Header, string(bodyContent), config[id].Secret) {
-		utils.Log2file("验证失败", config[id].Logfile)
+	var contentMap map[string]interface{}
+
+	ct := r.Header.Get("Content-Type")
+	// 针对`Gitea`请使用`v1.10.0-rc2`以下版本issue
+	// https://github.com/go-gitea/gitea/issues/7700
+	if ct == "" || len(ct) <= 0 {
+		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		ct = r.Header.Get("Content-Type")
+	}
+	ct = strings.ToLower(ct)
+	if ct == "application/x-www-form-urlencoded" {
+		// 恢复Body内容
+		r.Body = ioutil.NopCloser(bytes.NewBuffer(bodyContent))
+		// 解析参数，填充到Form、PostForm
+		err = r.ParseForm()
+		if r.Form == nil || len(r.Form) <= 0 {
+			fmt.Fprintln(w, "{\"code\":200, \"error\":\"Response Body is empty\"}")
+			return
+		}
+		payload := r.Form["payload"][0]
+		json.Unmarshal([]byte(payload), &contentMap)
+	} else if ct == "application/json" {
+		err = json.Unmarshal(bodyContent, &contentMap)
+		if err != nil {
+			fmt.Fprintln(w, "{\"code\":200, \"error\":\"Unmatch Response Body\"}")
+			return
+		}
+	}
+	if contentMap == nil || contentMap["repository"] == nil {
+		fmt.Fprintln(w, "{\"code\":200, \"error\":\"Unmatch Response Body\"}")
+		return
+	}
+	id := contentMap["repository"].(map[string]interface{})["full_name"].(string)
+	//id = strings.ToLower(id)
+	config := config[id]
+	if reflect.DeepEqual(config, Config{}) {
+		fmt.Fprintln(w, "{\"code\":200, \"error\":\"Config is not found\"}")
+		return
+	}
+
+	if !VerifySignature(r.Header, string(bodyContent), config.Secret) {
+		utils.Log2file("验证失败", config.Logfile)
 		fmt.Fprintln(w, "{\"code\":200, \"error\":\"Signature error\"}")
+		return
 	}
 	fmt.Fprintln(w, "{\"code\":200, \"description\":\"OK\"}")
-	utils.Log2file("验证通过,启动部署任务", config[id].Logfile)
+	utils.Log2file("验证通过,启动部署任务", config.Logfile)
 	AddNewTask(id)
 }
 
@@ -74,7 +114,6 @@ func VerifySignature(header http.Header, data string, secret string) bool {
 	if signature == "" || len(signature) <= 0 {
 		signature = header.Get("X-Gogs-Signature")
 	}
-
 	return signature == utils.ComputeHmacSha256(data, secret)
 }
 
@@ -85,10 +124,8 @@ func VerifyEvent(header http.Header, event string) bool {
 	if e == "" || len(e) <= 0 {
 		e = header.Get("X-Gogs-Event")
 	}
-
 	if e == "" || len(e) <= 0 {
 		e = header.Get("X-GitHub-Event")
 	}
-
 	return event == strings.Trim(e, "UTF-8")
 }

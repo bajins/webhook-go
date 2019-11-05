@@ -14,19 +14,18 @@ var (
 func Log2file(content, logName string) {
 	var err error
 
+	if logName == "" || len(logName) <= 0 {
+		logName = "webhook-go.log"
+	}
+	dir, file := path.Split(logName)
+	logsDir = path.Join(logsDir, dir)
 	if _, err := os.Stat(logsDir); err != nil {
 		err = os.MkdirAll(logsDir, 0711)
 		if err != nil {
 			return
 		}
 	}
-
-	if logName == "" || len(logName) <= 0 {
-		logName = "webhook-go.log"
-	}
-
-	logPath := path.Join(logsDir, logName)
-
+	logPath := path.Join(logsDir, file)
 	if _, err := os.Stat(logPath); err != nil {
 		_, err = os.Create(logPath)
 		if err != nil {
