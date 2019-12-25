@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"reflect"
@@ -85,8 +86,10 @@ func webHooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := contentMap["repository"].(map[string]interface{})["full_name"].(string)
+	log.Println("当前full_name：", id)
 	//id = strings.ToLower(id)
 	config := config[id]
+	log.Println("当前配置：", config)
 	if reflect.DeepEqual(config, Config{}) {
 		fmt.Fprintln(w, "{\"code\":200, \"error\":\"Config is not found\"}")
 		return

@@ -48,6 +48,8 @@ func startTask(task *TaskQueue) {
 		} else {
 			log.Fatal(filePath, "执行错误：", err)
 			utils.Log2file(fmt.Sprintf("部署失败：%s %s", filePath, err), GetLogName(task.Id))
+			// 如果执行失败则添加到队列末尾，等待稍后继续执行
+			//queue = append(queue, task)
 		}
 	}
 	queue = queue[:0]
