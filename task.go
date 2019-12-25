@@ -40,7 +40,7 @@ func startTask(task *TaskQueue) {
 			utils.Log2file(fmt.Sprintf("部署失败：%s", err), GetLogName(task.Id))
 			return
 		}
-		out, err := exec.Command("/bin/sh", filePath).Output()
+		out, err := exec.Command("sh", filePath).Output()
 		log.Println(filePath, "执行结果：", string(out))
 		utils.Log2file(fmt.Sprintf("%s执行结果：%s", filePath, string(out)), GetLogName(task.Id))
 		if err == nil {
