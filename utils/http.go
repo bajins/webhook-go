@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"strconv"
@@ -94,131 +93,55 @@ func HttpProxyGet(rawurl string, header http.Header, proxyURL string) (io.ReadCl
 	return nil, err
 }
 
-// http.Client发送请求，此方式是封装的http.NewRequest方法
-// method:	请求方法：POST、GET、PUT、DELETE
-// urlText:		请求地址
-// params:	请求参数
-func HttpClient(method, urlText, contentType string, params map[string]string) (*http.Response, error) {
-	if urlText == "" {
-		panic(errors.New("url不能为空"))
-	}
-	client := http.Client{Timeout: 30 * time.Second}
-
-	var resp *http.Response
-	var err error
-
-	method = strings.ToUpper(method)
-	if method == "POST" {
-		if params != nil {
-			switch contentType {
-			case "application/x-www-form-urlencoded":
-				data := make(url.Values)
-				//data := url.Values{}
-				for k, v := range params {
-					data[k] = []string{v}
-					//data.Set(k, v)
-				}
-				resp, err = client.PostForm(urlText, data)
-			case "multipart/form-data":
-				data := url.Values{}
-				for k, v := range params {
-					data.Set(k, v)
-				}
-				resp, err = client.PostForm(urlText, data)
-			case "text/xml":
-				jsonStr, err := json.Marshal(params)
-				if err != nil {
-					return nil, err
-				}
-				data := strings.ReplaceAll(string(jsonStr), " ", "+")
-				resp, err = client.Post(urlText, contentType, bytes.NewBuffer([]byte(data)))
-			default: // application/json
-				jsonStr, err := json.Marshal(params)
-				if err != nil {
-					return nil, err
-				}
-				resp, err = client.Post(urlText, "application/json", bytes.NewBuffer(jsonStr))
-			}
-		} else {
-			resp, err = client.Post(urlText, contentType, nil)
-		}
-	} else {
-		if params != nil {
-			urlText = urlText + "?"
-			for key, value := range params {
-				urlText += key + "=" + value + "&"
-			}
-		}
-		// url编码
-		//urlText=urlText.QueryEscape(urlText)
-		if method == "HEAD" {
-			resp, err = client.Head(urlText)
-		} else {
-			resp, err = client.Get(urlText)
-		}
-	}
-	return resp, err
-}
-
 // http.NewRequest发送请求
+//
 // method:	请求方法：POST、GET、PUT、DELETE
 // urlText:		请求地址
+// contentType: 请求数据类型，首字母简写，如：axwfu
 // params: 	请求提交的数据
-// header:	请求体格式，如：application/json
+// header:	请求头
 func HttpRequest(method, urlText, contentType string, params, header map[string]string) (*http.Response, error) {
 	if urlText == "" {
 		panic(errors.New("url不能为空"))
 	}
 	method = strings.ToUpper(method)
+
 	var req *http.Request
 	var err error
-	if method == "POST" {
-		if params != nil {
+	var body io.Reader
+	if params != nil {
+		if method == "POST" {
 			switch contentType {
-			case "application/x-www-form-urlencoded":
+			case "axwfu": // application/x-www-form-urlencoded;
 				data := make(url.Values)
-				//data := url.Values{}
 				for k, v := range params {
 					data[k] = []string{v}
-					//data.Set(k, v)
 				}
-				req, err = http.NewRequest(method, urlText, strings.NewReader(data.Encode()))
-				if header == nil || req.Header.Get("content-type") == "" {
-					req.Header.Add("content-type", "application/x-www-form-urlencoded;charset=utf-8")
-				}
-			case "multipart/form-data":
+				body = strings.NewReader(data.Encode())
+				contentType = "application/x-www-form-urlencoded; charset=utf-8"
+			case "mfd": // multipart/form-data
 				data := url.Values{}
 				for k, v := range params {
 					data.Set(k, v)
 				}
-				req, err = http.NewRequest(method, urlText, strings.NewReader(data.Encode()))
-				if header == nil || req.Header.Get("content-type") == "" {
-					req.Header.Add("content-type", "multipart/form-data;charset=utf-8")
-				}
-			case "text/xml":
+				body = strings.NewReader(data.Encode())
+				contentType = "multipart/form-data; charset=utf-8"
+			case "tx": // text/xml
 				data := url.Values{}
 				for k, v := range params {
 					data.Set(k, strings.ReplaceAll(v, " ", "+"))
 				}
-				req, err = http.NewRequest(method, urlText, strings.NewReader(data.Encode()))
-				if header == nil || req.Header.Get("content-type") == "" {
-					req.Header.Add("content-type", "text/xml;charset=utf-8")
-				}
+				body = strings.NewReader(data.Encode())
+				contentType = "text/xml; charset=utf-8"
 			default: // application/json
 				jsonStr, err := json.Marshal(params)
 				if err != nil {
 					return nil, err
 				}
-				req, err = http.NewRequest(method, urlText, bytes.NewBuffer(jsonStr))
-				if header == nil || req.Header.Get("content-type") == "" {
-					req.Header.Add("content-type", "application/json;charset=utf-8")
-				}
+				body = bytes.NewBuffer(jsonStr)
+				contentType = "application/json; charset=utf-8"
 			}
 		} else {
-			req, err = http.NewRequest(method, urlText, nil)
-		}
-	} else {
-		if params != nil {
 			urlText = urlText + "?"
 			for key, value := range params {
 				urlText += key + "=" + value + "&"
@@ -226,21 +149,25 @@ func HttpRequest(method, urlText, contentType string, params, header map[string]
 		}
 		// url编码
 		//urlText=urlText.QueryEscape(urlText)
-		req, err = http.NewRequest(method, urlText, nil)
 	}
+	req, err = http.NewRequest(method, urlText, body)
 
 	if err != nil {
 		return nil, err
 	}
-
 	if header != nil {
 		for key, value := range header {
 			req.Header.Add(key, value)
 		}
 	}
-
-	// dump出远程服务器返回的信息
-	httputil.DumpRequest(req, false)
+	if req.Header.Get("Content-Type") == "" && method == "POST" {
+		req.Header.Set("Content-Type", contentType)
+	}
+	if req.Header.Get("User-Agent") == "" {
+		req.Header.Set("User-Agent", UserAgent)
+	}
+	// dump出远程服务器返回的信息，调试请求
+	//bd, err := httputil.DumpRequest(req, true)
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	// 发起请求
