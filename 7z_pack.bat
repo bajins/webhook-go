@@ -19,7 +19,7 @@ if not exist "%~dp0$testAdmin$" (
 setlocal enabledelayedexpansion
 
 :: %~f0 表示当前批处理的绝对路径,去掉引号的完整路径
-cscript -nologo -e:jscript "%~f0" download7zz
+cscript -nologo -e:jscript "%~f0" download7z
 if not "%errorlevel%" == "0" (
     @cmd /k
     goto :EXIT
@@ -124,9 +124,9 @@ for (i = 0; i < Argv.length; i++) {
 
 if (Argv.length > 0) {
     switch (Argv(0)) {
-        case "download7zz":
+        case "download7z":
             try{
-                download7zz();
+                download7z();
             }catch(e){
                 WScript.StdErr.WriteLine(e.message);
                 // 非正常退出
