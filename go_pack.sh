@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 需要打包的静态文件或目录
-static_files=(pyutils static)
+static_files=(data)
 
 # 脚本当前目录绝对路径
 project_path=$(cd `dirname $0`; pwd)
