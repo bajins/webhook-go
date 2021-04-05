@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -42,7 +42,7 @@ func webHooks(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "{\"code\":200, \"error\":\"Unmatch x-github-event\"}")
 		return
 	}
-	bodyContent, err := ioutil.ReadAll(r.Body)
+	bodyContent, err := io.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintln(w, "{\"code\":200, \"error\":\"Error Response Body\"}")
 		return
@@ -65,7 +65,7 @@ func webHooks(w http.ResponseWriter, r *http.Request) {
 	ct = strings.ToLower(ct)
 	if ct == "application/x-www-form-urlencoded" {
 		// 恢复Body内容
-		r.Body = ioutil.NopCloser(bytes.NewBuffer(bodyContent))
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyContent))
 		// 解析参数，填充到Form、PostForm
 		err = r.ParseForm()
 		if r.Form == nil || len(r.Form) <= 0 {

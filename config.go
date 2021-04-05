@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
+	"os"
 )
 
 var (
@@ -18,7 +18,7 @@ type Config struct {
 
 // LoadConfig load the config
 func LoadConfig() error {
-	result, err := ioutil.ReadFile("data/config.json")
+	result, err := os.ReadFile("data/config.json")
 	if err != nil {
 		return err
 	}

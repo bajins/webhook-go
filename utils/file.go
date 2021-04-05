@@ -3,7 +3,6 @@ package utils
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
@@ -43,10 +42,8 @@ func GetDirListAll(files []os.FileInfo, dirPath string) ([]os.FileInfo, error) {
 }
 
 // 获取当前路径下所有文件
-// ioutil中提供了一个非常方便的函数函数ReadDir，
-// 他读取目录并返回排好序的文件以及子目录名([]os.FileInfo)
-func GetFileList(path string) ([]os.FileInfo, error) {
-	readerInfos, err := ioutil.ReadDir(path)
+func GetFileList(path string) ([]os.DirEntry, error) {
+	readerInfos, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}
