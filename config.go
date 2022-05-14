@@ -22,12 +22,15 @@ func LoadConfig() error {
 	if err != nil {
 		return err
 	}
-	json.Unmarshal(result, &config)
+	err = json.Unmarshal(result, &config)
+	if err != nil {
+		return err
+	}
 	log.Println("当前加载的配置：", config)
 	return nil
 }
 
-// 获取配置中的log文件名称
+// GetLogName 获取配置中的log文件名称
 func GetLogName(id string) string {
 	logName := config[id].Logfile
 	if logName == "" || len(logName) <= 0 {
