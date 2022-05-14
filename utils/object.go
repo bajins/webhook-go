@@ -5,9 +5,7 @@ import (
 	"time"
 )
 
-/**
-类型判断
-*/
+// TypeJudgment 类型判断
 func TypeJudgment(f interface{}) {
 	switch vv := f.(type) {
 	case string:

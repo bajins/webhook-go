@@ -1,3 +1,4 @@
+// Package utils
 /**
  *
  * @Description:
@@ -16,7 +17,7 @@ import (
 	"time"
 )
 
-// 随机打乱数组顺序
+// Shuffle 随机打乱数组顺序
 func Shuffle(slice []interface{}) {
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 	for len(slice) > 0 {

@@ -13,7 +13,7 @@ import (
 	"webhook-go/utils"
 )
 
-// 启动服务
+// StartService 启动服务
 func StartService(address string, port string) error {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/webHooks", webHooks)
@@ -104,7 +104,7 @@ func webHooks(w http.ResponseWriter, r *http.Request) {
 	AddNewTask(id)
 }
 
-// 验证Signature
+// VerifySignature 验证Signature
 func VerifySignature(header http.Header, data string, secret string) bool {
 	signature := header.Get("X-Hub-Signature")
 	if signature != "" && len(signature) > 0 {
@@ -119,7 +119,7 @@ func VerifySignature(header http.Header, data string, secret string) bool {
 	return signature == utils.ComputeHmacSha256(data, secret)
 }
 
-// 验证Event
+// VerifyEvent 验证Event
 func VerifyEvent(header http.Header, event string) bool {
 	e := header.Get("X-Gitea-Event")
 

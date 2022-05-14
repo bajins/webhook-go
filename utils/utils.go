@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// ParseBool返回字符串表示的布尔值。
+// ParseBool 返回字符串表示的布尔值。
 // 它接受1,1.0，t，T，TRUE，true，True，YES，yes，Yes，Y，y，ON，on，On，0,0.0，f，F，FALSE，false，False，NO，no，No，N，n，OFF，off，Off。
 // 任何其他值都会返回错误。
 func ParseBool(val interface{}) (value bool, err error) {
@@ -41,14 +41,14 @@ func ParseBool(val interface{}) (value bool, err error) {
 	return false, fmt.Errorf("parsing <nil>: invalid syntax")
 }
 
-// 返回参数的类型
+// Type 返回参数的类型
 func Type(v interface{}) string {
 	t := reflect.TypeOf(v)
 	k := t.Kind()
 	return k.String()
 }
 
-// 判断是否在数组中
+// InArray 判断是否在数组中
 func InArray(in interface{}, list interface{}) bool {
 	ret := false
 	if in == nil {
@@ -87,7 +87,7 @@ func InArray(in interface{}, list interface{}) bool {
 	return ret
 }
 
-// gbk转换utf-8
+// GBK2UTF gbk转换utf-8
 func GBK2UTF(text string) string {
 	enc := mahonia.NewDecoder("GB18030")
 
@@ -96,7 +96,7 @@ func GBK2UTF(text string) string {
 	return strings.ReplaceAll(text, "聽", "&nbsp;")
 }
 
-// 分页
+// Pagination 分页
 // page 页数
 // rows 取多少条数据
 // total 数据总条数

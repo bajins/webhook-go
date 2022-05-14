@@ -37,6 +37,12 @@ func Log2file(content, logName string) {
 		return
 	}
 	timeString := time.Now().Format("2006-01-02 15:04:05")
-	f.WriteString("[" + timeString + "]" + "" + content)
-	f.WriteString("\n")
+	_, err = f.WriteString("[" + timeString + "]" + "" + content)
+	if err != nil {
+		return
+	}
+	_, err = f.WriteString("\n")
+	if err != nil {
+		return
+	}
 }
